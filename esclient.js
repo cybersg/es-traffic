@@ -16,7 +16,7 @@ function Client() {
         
 	    this.client = new elasticsearch.Client({
             host: "localhost:9200",
-            log :"trace"
+            log: "error"
         });
 
         this.eventEmitter = new events.EventEmitter();

@@ -30,9 +30,9 @@ app.get('/count', function (req, resp) {
     client.count(req.query);
 });
 
-app.get('/aggs/:fields', function (req, resp) {
-    console.log(req.path);
-    client.aggs();
+app.get('/aggs', function (req, resp) {
+    console.log(req.url);
+    client.aggs(req.query.fields.split(','));
 });
 
 app.get('/stats', function (req, resp) {
