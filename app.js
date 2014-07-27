@@ -11,15 +11,15 @@ function sendResponse(response, result) {
     response.send(result);
 }
 
-app.use(express.static(__dirname));
+app.use('/www', express.static(__dirname));
+
 app.use(function (req, resp, next) {
     client.response = resp;
-    resp.set('Content-Type', 'application/json');
+//    resp.set('Content-Type', 'application/json');
     next();
 });
 
 app.get('/', function (req, resp) {
-    client.search({});
 });
 
 app.get('/monitor', function (req, resp) {
@@ -37,6 +37,10 @@ app.get('/aggs', function (req, resp) {
 
 app.get('/stats', function (req, resp) {
     client.stats();
+});
+
+app.get('/create', function(req, resp) {
+    client.create();
 });
 
 

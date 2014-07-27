@@ -1,4 +1,4 @@
 /node_modules
-/static
+/files
 /*.db
 /local

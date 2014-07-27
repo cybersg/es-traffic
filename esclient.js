@@ -16,21 +16,17 @@ function Client() {
         
 	    this.client = new elasticsearch.Client({
             host: "localhost:9200",
-            log: "error"
+            log: config.es_log_level || "error"
         });
 
         this.eventEmitter = new events.EventEmitter();
         this.eventEmitter.on("next", this.processDataChunk);
         this.eventEmitter.on("end", this.finish);
-
-        this.brand = {};
-        this.custom_label0 = {};
-        this.custom_label1 = {};
     };
 
     this.loadData = function() {
 
-        var pathname = "static/src.json";
+        var pathname = "files/src.json";
         return JSON.parse(fs.readFileSync(pathname, {encoding: "utf8"}));
     };
 
@@ -42,13 +38,7 @@ function Client() {
                 index: self.index,
                 type: self.type
             }, function (err, resp) {
-                if (err) throw err;
-                fs.writeFileSync("static/brand.json", JSON.stringify(Object.keys(self.brand)));
-                console.log("Written: static/brand.json");                  
-                fs.writeFileSync("static/custom_label0.json", JSON.stringify(Object.keys(self.custom_label0)));
-                console.log("Written: static/custom_label0.json");                               
-                fs.writeFileSync("static/custom_label1.json", JSON.stringify(Object.keys(self.custom_label1)));
-                console.log("Written: static/custom_label1.json");
+                if (err) throw err;           
                 self.response.send({message: msg, current_state: resp});
             });
         });
@@ -63,27 +53,25 @@ function Client() {
             n++;    
             var item = self.data[i];
             if (item) {
-                var id = item.id;
-                delete item.id;
+                var id = item.id || item._id;
+                delete item.id; delete item._id;
                 if (Object.keys(item).length) {
                     d.push(
                         {index: {_index: self.index, _type: self.type, _id: id}},
                         item
                     );
-                    self.brand[item.brand] = null;
-                    self.custom_label0[item.custom_label0] = null;
-                    self.custom_label1[item.custom_label1] = null;
                 }
             }
             if (n > chunkSize) {
                 break;
             }
         }
-        if (d.length) {
-            self.bulk(d, index + d.length);
+        index = index + n;
+        if (!d.length) {
+            self.eventEmitter.emit("end");
         }
         else {
-            self.eventEmitter.emit("end");
+            self.bulk(d, index); 
         }
         return d;
     };
@@ -99,6 +87,17 @@ function Client() {
                 });
             });
         });
+    };
+    
+    this.bulk = function(body, index) {
+        
+        this.client.bulk({
+            body: body
+        }, function (err, resp) {   
+            if (err) throw err;
+            console.log("Next chunk, index: " + index);
+            self.eventEmitter.emit("next", index);
+        });    
     };
     
     this.create = function() {
@@ -132,17 +131,6 @@ function Client() {
                 self.indexDocs(mapping);
             }
         });
-    };
-
-    this.bulk = function(body, index) {
-        
-        this.client.bulk({
-            body: body
-        }, function (err, resp) {   
-            if (err) throw err;
-            console.log("Next chunk, index: " + index);
-            self.eventEmitter.emit("next", index);
-        });    
     };
 
     this.count = function(query) {
@@ -200,44 +188,49 @@ function Client() {
 
     this.monitor = function(params) {
         var db = new DB.DB();
-        var charts = function(rows) {
-            
-            var cpuChart = new quiche('line');
-            cpuChart.setTitle("CPU");
-            cpuChart.setWidth(800);
-
-            var memChart = new quiche('bar');
-            memChart.setTitle("Memory");
-            memChart.setWidth(800);
-            
-            var times = [];
-            var cpuSys = [], cpuUser = [];
-            var memUsed = [], memFree = [];
-            
+        var nodes = {};
+        var charts = function(rows) {            
             rows.forEach(function (row) {
-                times.push(row.timeStat);
-                cpuSys.push(row.cpuSys);
-                cpuUser.push(row.cpuUser);
-                memUsed.push(row.memUsed);
-                memFree.push(row.memFree);
+                console.log(row);
+                if (!nodes.hasOwnProperty(row.name)) {
+                    nodes[row.name] = {
+                        times: [], cpuSys: [], cpuUser: [],
+                        memUsed: [], memFree: []
+                    };
+                };
+                nodes[row.name].times.push(row.timeStat);
+                nodes[row.name].cpuSys.push(row.cpuSys);
+                nodes[row.name].cpuUser.push(row.cpuUser);
+                nodes[row.name].memUsed.push(row.memUsed);
+                nodes[row.name].memFree.push(row.memFree);
             });
-            
-            cpuChart.addData(cpuSys, "CPU SYS", "0000FF");
-            cpuChart.addData(cpuUser, "CPU USER", "00FF00");
-            cpuChart.addAxisLabels('x', times);
-            cpuChart.setAutoScaling();
+            var resp = {};
+            for (var name in nodes) {
+                 var cpuChart = new quiche('line');
+                cpuChart.setTitle("CPU [%]");
+                cpuChart.setWidth(800);
 
-            memChart.setAutoScaling();
-            memChart.setBarStacked();
-            memChart.setLegendBottom();
-            memChart.addData(memUsed, "Used", "FF0000");
-            memChart.addData(memFree, "Free", "00FF00");
-            memChart.addAxisLabels('x', times);
-            
-            self.response.send({
-                cpu: cpuChart.getUrl(true),
-                mem: memChart.getUrl(true)
-            });
+                var memChart = new quiche('bar');
+                memChart.setTitle("Memory [MB]");
+                memChart.setWidth(800);
+                
+                cpuChart.addData(nodes[name].cpuSys, "CPU SYS", "0000FF");
+                cpuChart.addData(nodes[name].cpuUser, "CPU USER", "00FF00");
+                cpuChart.addAxisLabels('x', nodes[name].times);
+                cpuChart.setAutoScaling();
+
+                memChart.setAutoScaling();
+                memChart.setBarStacked();
+                memChart.setLegendBottom();
+                memChart.addData(nodes[name].memUsed, "Used", "FF0000");
+                memChart.addData(nodes[name].memFree, "Free", "00FF00");
+                memChart.addAxisLabels('x', nodes[name].times);
+                resp[name] = {
+                    cpu: cpuChart.getUrl(true),
+                    mem: memChart.getUrl(true)
+                };
+            }            
+            self.response.send(resp);
         };
         db.getStats(charts);
     };
