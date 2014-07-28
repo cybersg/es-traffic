@@ -23,7 +23,7 @@ app.get('/', function (req, resp) {
 });
 
 app.get('/monitor', function (req, resp) {
-    client.monitor();
+    client.monitor(req.query);
 });
 
 app.get('/count', function (req, resp) {
@@ -31,7 +31,6 @@ app.get('/count', function (req, resp) {
 });
 
 app.get('/aggs', function (req, resp) {
-    console.log(req.url);
     client.aggs(req.query.fields.split(','));
 });
 

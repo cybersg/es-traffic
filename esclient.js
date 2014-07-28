@@ -186,12 +186,11 @@ function Client() {
         });
     };
 
-    this.monitor = function(params) {
+    this.monitor = function(query) {
         var db = new DB.DB();
         var nodes = {};
         var charts = function(rows) {            
             rows.forEach(function (row) {
-                console.log(row);
                 if (!nodes.hasOwnProperty(row.name)) {
                     nodes[row.name] = {
                         times: [], cpuSys: [], cpuUser: [],
