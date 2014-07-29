@@ -64,7 +64,7 @@ function DB(dbFile) {
                         "round(avg(cpu_sys), 2) AS cpuSys, round(avg(cpu_user), 2) AS cpuUser, " + 
                         "round(avg(mem_used)/(1024*1024), 2) AS memUsed, " +
                         "round(avg(mem_free)/(1024*1024), 2) AS memFree FROM NodeStats " +
-                        "WHERE stat_time >= ?" +
+                        "WHERE stat_time >= ? " +
                         "GROUP BY 1, strftime('%Y-%m-%d %H:%M', stat_time, 'unixepoch', 'localtime')", t, 
                     function (err, row) {
                         if (err) throw err;

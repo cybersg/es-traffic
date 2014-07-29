@@ -45,5 +45,5 @@ app.get('/create', function(req, resp) {
 
 app.listen(2012, os.hostname(), function () {
     console.log(util.format("Listening on %s:%d", this.address().address, this.address().port));
-});
+}).on("error", function(e) {console.log(['ERROR', e])});
 
