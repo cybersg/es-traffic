@@ -4,8 +4,19 @@
     <meta charset="utf-8">
     <title>Elasticsearch client monitor</title>
     <script src="http://code.jquery.com/jquery-2.1.1.min.js"></script>
+    <script src="js/ext/d3.js"></script>
+    <script src="js/ext/crossfilter.js"></script>
+    <script src="js/ext/dc.js"></script>
+    <script src="js/ext/knockout-3.1.0.js"></script>
     <script src="index.js"></script>
+
+    <link rel="stylesheet" type="text/css" href="css/dc.css" media="screen" />
+    
   </head>
   <body>
+    <div id="main" data-bind="foreach: nodes">
+      <h3 data-bind="text: nodeName"></h3>
+      <div data-bind="attr: {id :nodeName}"></div>
+    </div>
   </body>
 </html>

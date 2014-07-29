@@ -2,7 +2,7 @@ var express = require('express');
 var util = require('util');
 var os = require('os');
 var events = require('events');
-var esclient = require('./esclient');
+var esclient = require('./js/esclient');
 
 var app = express();
 var client = new esclient.ESClient();
@@ -45,5 +45,5 @@ app.get('/create', function(req, resp) {
 
 app.listen(2012, os.hostname(), function () {
     console.log(util.format("Listening on %s:%d", this.address().address, this.address().port));
-}).on("error", function(e) {console.log(['ERROR', e])});
+}).on("error", function(e) {console.log(['ERROR', e]);});
 

@@ -192,44 +192,40 @@ function Client() {
         var charts = function(rows) {            
             rows.forEach(function (row) {
                 if (!nodes.hasOwnProperty(row.name)) {
-                    nodes[row.name] = {
-                        times: [], cpuSys: [], cpuUser: [],
-                        memUsed: [], memFree: []
-                    };
+                    nodes[row.name] = [];
                 };
-                nodes[row.name].times.push(row.timeStat);
-                nodes[row.name].cpuSys.push(row.cpuSys);
-                nodes[row.name].cpuUser.push(row.cpuUser);
-                nodes[row.name].memUsed.push(row.memUsed);
-                nodes[row.name].memFree.push(row.memFree);
+                nodes[row.name].push({
+                    timeStat: row.timeStat,
+                    cpuSys: row.cpuSys, cpuUser: row.cpuUser,
+                    memUsed: row.memUsed, memFree: row.memFree
+                });                   
             });
-            var resp = {};
-            for (var name in nodes) {
-                 var cpuChart = new quiche('line');
-                cpuChart.setTitle("CPU [%]");
-                cpuChart.setWidth(800);
+            // for (var name in nodes) {
+            //      var cpuChart = new quiche('line');
+            //     cpuChart.setTitle("CPU [%]");
+            //     cpuChart.setWidth(800);
 
-                var memChart = new quiche('bar');
-                memChart.setTitle("Memory [MB]");
-                memChart.setWidth(800);
+            //     var memChart = new quiche('bar');
+            //     memChart.setTitle("Memory [MB]");
+            //     memChart.setWidth(800);
                 
-                cpuChart.addData(nodes[name].cpuSys, "CPU SYS", "0000FF");
-                cpuChart.addData(nodes[name].cpuUser, "CPU USER", "00FF00");
-                cpuChart.addAxisLabels('x', nodes[name].times);
-                cpuChart.setAutoScaling();
+            //     cpuChart.addData(nodes[name].cpuSys, "CPU SYS", "0000FF");
+            //     cpuChart.addData(nodes[name].cpuUser, "CPU USER", "00FF00");
+            //     cpuChart.addAxisLabels('x', nodes[name].times);
+            //     cpuChart.setAutoScaling();
 
-                memChart.setAutoScaling();
-                memChart.setBarStacked();
-                memChart.setLegendBottom();
-                memChart.addData(nodes[name].memUsed, "Used", "FF0000");
-                memChart.addData(nodes[name].memFree, "Free", "00FF00");
-                memChart.addAxisLabels('x', nodes[name].times);
-                resp[name] = {
-                    cpu: cpuChart.getUrl(true),
-                    mem: memChart.getUrl(true)
-                };
-            }            
-            self.response.send(resp);
+            //     memChart.setAutoScaling();
+            //     memChart.setBarStacked();
+            //     memChart.setLegendBottom();
+            //     memChart.addData(nodes[name].memUsed, "Used", "FF0000");
+            //     memChart.addData(nodes[name].memFree, "Free", "00FF00");
+            //     memChart.addAxisLabels('x', nodes[name].times);
+            //     resp[name] = {
+            //         cpu: cpuChart.getUrl(true),
+            //         mem: memChart.getUrl(true)
+            //     };
+            // }
+            self.response.send(nodes);
         };
         db.getStats(charts);
     };
