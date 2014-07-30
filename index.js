@@ -22,14 +22,14 @@ function AppViewModel() {
     this.init = function() {
         $.getJSON('/monitor', function (data) {
             for (var nodeName in data) {
-                self.nodes.push({nodeName: nodeName});
-                self.render(nodeName, data[nodeName]);
+                var nn = nodeName.replace(/\s+/, "_", "g");
+                self.nodes.push({nodeName: nn});
+                self.render(nn, data[nodeName]);
             }
         });
     };
 
     this.render = function(containerId, data) {
-        console.log(data);
         data.forEach(function (r) {
             r.timeStat = d3.time.format("%Y-%m-%d %H:%M").parse(r.timeStat);
         });
