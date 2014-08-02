@@ -42,7 +42,7 @@ function AppViewModel() {
         dc.lineChart('#' + containerId)
             .width(800)
             .dimension(dim)
-            .group(sysg, "sys")        
+            .group(sysg, "sys")
             .stack(userg, "user")
             .renderArea(true)
             .legend(dc.legend().x(150).y(10))
@@ -50,8 +50,17 @@ function AppViewModel() {
             .yAxisLabel("CPU [%]")
             .brushOn(false)
         ;
+        var memu = dim.group().reduceSum(function (r) { return r.memUsed; });
+        var memf = dim.group().reduceSum(function (r) { return r.memFree; });
+        dc.barChart('#' + containerId)
+        .width(800)
+        .dimension(dim)
+        .group(memu)
+        .stack(memf)
+        .x(d3.time.scale().domain([new Date(mint), new Date(maxt)]))
+       //.y(d3.scale.linear().domain([0, data[0].memUsed+data[0].memFree]))
+        ;
         dc.renderAll();
-        
     };
 
     this.init();
