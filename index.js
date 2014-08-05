@@ -23,7 +23,11 @@ function AppViewModel() {
         $.getJSON('/monitor', function (data) {
             for (var nodeName in data) {
                 var nn = nodeName.replace(/\s+/, "_", "g");
-                self.nodes.push({nodeName: nn});
+                self.nodes.push({
+                    nodeName: nodeName,
+                    nodeIdCpu: nn + '-cpu',
+                    nodeIdMem: nn + '-mem'
+                });
                 self.render(nn, data[nodeName]);
             }
         });
@@ -32,6 +36,8 @@ function AppViewModel() {
     this.render = function(containerId, data) {
         data.forEach(function (r) {
             r.timeStat = d3.time.format("%Y-%m-%d %H:%M").parse(r.timeStat);
+            r.memUsed = parseInt(Math.round(r.memUsed));
+            r.memFree = parseInt(Math.round(r.memFree));
         });
         var ndx = crossfilter(data);
         var dim = ndx.dimension(function (r) {return r.timeStat;});
@@ -39,7 +45,7 @@ function AppViewModel() {
         var maxt = dim.top(1)[0].timeStat;
         var userg = dim.group().reduceSum(function (r) { return r.cpuUser; });
         var sysg = dim.group().reduceSum(function (r) { return r.cpuSys; });
-        dc.lineChart('#' + containerId)
+        dc.lineChart('#' + containerId + '-cpu')
             .width(800)
             .dimension(dim)
             .group(sysg, "sys")
@@ -49,18 +55,23 @@ function AppViewModel() {
             .x(d3.time.scale().domain([new Date(mint), new Date(maxt)]))
             .yAxisLabel("CPU [%]")
             .brushOn(false)
-        ;
+        .render();
+        dim.filterAll();
         var memu = dim.group().reduceSum(function (r) { return r.memUsed; });
         var memf = dim.group().reduceSum(function (r) { return r.memFree; });
-        dc.barChart('#' + containerId)
+        dc.lineChart('#' + containerId + '-mem')
+        //.centerBar(true)
+        //.gap(2)
         .width(800)
         .dimension(dim)
-        .group(memu)
-        .stack(memf)
+        .group(memu, "used")
+        .stack(memf, "free")
         .x(d3.time.scale().domain([new Date(mint), new Date(maxt)]))
-       //.y(d3.scale.linear().domain([0, data[0].memUsed+data[0].memFree]))
-        ;
-        dc.renderAll();
+        .brushOn(true)
+        .legend(dc.legend().x(150).y(0))
+        .renderArea(true)
+        .yAxisLabel("Memory [MB]")
+        .render();
     };
 
     this.init();

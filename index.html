@@ -16,7 +16,8 @@
   <body>
     <div id="main" data-bind="foreach: nodes">
       <h3 data-bind="text: nodeName"></h3>
-      <div data-bind="attr: {id :nodeName}"></div>
+      <span data-bind="attr: {id: nodeIdCpu}"></span>
+      <span data-bind="attr: {id: nodeIdMem}"></span>
     </div>
   </body>
 </html>
